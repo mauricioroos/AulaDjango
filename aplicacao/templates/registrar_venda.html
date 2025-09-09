@@ -1,0 +1,59 @@
+{% load bootstrap4 %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Nova Venda</title>
+    {% bootstrap_css %}
+</head>
+<body>
+<div class="container my-4">
+    <h1>Registrar Nova Venda</h1>
+    {% bootstrap_messages %}
+    <hr>
+
+    <form action="{% url 'url_registrar_venda' %}" method="POST">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="cliente"><b>Selecione o Cliente:</b></label>
+            <select name="cliente" id="cliente" class="form-control" required>
+                <option value="">----</option>
+                {% for cliente in clientes %}
+                    <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <hr>
+        <h3>Produtos Disponíveis</h3>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Preço Unitário</th>
+                <th>Estoque</th>
+                <th style="width: 120px;">Quantidade</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for produto in produtos %}
+                <tr>
+                    <td>{{ produto.nome }}</td>
+                    <td>R$ {{ produto.preco }}</td>
+                    <td>{{ produto.qtde }}</td>
+                    <td>
+                        <input type="number" name="produto_{{ produto.id }}" class="form-control" min="0" value="0">
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <input type="submit" value="Finalizar Venda" class="btn btn-success mt-3">
+        <a href="{% url 'url_produto' %}" class="btn btn-secondary mt-3">Cancelar</a>
+    </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{% load bootstrap4 %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de clientes</title>
+    {% bootstrap_css %}
+</head>
+<body>
+    <div class="container my-4">
+        <form action="{% url 'url_cad_cliente'%}" method="POST">
+            {% csrf_token %}
+            <table>
+                {{ form_cliente.as_table }}
+                {{ form_perfil.as_table }}
+            </table>
+            <input type="submit" value="Salvar" class="btn btn-success">
+        </form>
+    </div>
+
+</body>
+</html>
