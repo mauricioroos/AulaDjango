@@ -9,6 +9,10 @@ from django.contrib import messages
 from .forms import ClienteForm, PerfilForm
 from django.utils import timezone
 from decimal import Decimal
+import io
+import pandas as pd
+import matplotlib.pyplot as plt
+from .models import Avaliacao 
 
 
 def index(request):
@@ -167,4 +171,32 @@ def lista_vendas(request):
         'vendas': vendas
     }
     return render(request, 'lista_vendas.html', context)
+
+def get_dataframe():
+    avaliacoes = Avaliacao.objects.all().values()
+    df = pd.DataFrame(list(avaliacoes))
+    return df
+def plot_to_base64(fig):
+    fig.savefig(buf, format='png')
+    buf.seek(0)
+    string = base64.b64encode(buf.read())
+    return urllib.parse.quote(string)
+def usuarios_mais_ativos(df):
+    usuarios_ativos = df.dropna(subset=['profile_name'])['profile_name'].value_counts().nlargest(15)
+    plt.figure(figsize=(12, 8))
+    usuarios_ativos.sort_values().plot(kind='barh', color='blue')
+    plt.title('Top 15 Usuários Mais Ativos"')
+    plt.xlabel('Número de Avaliações')
+    plt.ylabel('Usuário')
+    plt.tight_layout() 
+    plt.show()
+def evolucacao_ao_longo_do_tempo():
+   df['data_review'] = pd.to_datetime(df['review_time'], unit='s')
+   df['ano'] = df['data_review'].dt.year
+   
+   
+def preco_vs_notas():
+    
+    
+    pass
 
