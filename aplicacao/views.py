@@ -167,3 +167,4 @@ def lista_vendas(request):
         'vendas': vendas
     }
     return render(request, 'lista_vendas.html', context)
+
