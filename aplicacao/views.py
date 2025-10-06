@@ -158,11 +158,10 @@ def lista_vendas(request):
     context = {'vendas': vendas}
     return render(request, 'lista_vendas.html', context)
 
-# --- VIEW ÚNICA PARA O DASHBOARD COM TODOS OS GRÁFICOS ---
 def dashboard_view(request):
     df = get_dataframe()
     
-    # Análise 1
+ 
     df_filtrado_usr = df.dropna(subset=['profile_name'])
     df_filtrado_usr = df_filtrado_usr[df_filtrado_usr['profile_name'] != 'nan']
     usuarios_ativos = df_filtrado_usr['profile_name'].value_counts().nlargest(15)
@@ -172,7 +171,6 @@ def dashboard_view(request):
     grafico_usuarios_ativos = plot_to_base_64(plt.gcf())
     plt.close()
 
-    # Análise 2
     df_evolucao = df.copy()
     df_evolucao['data_review'] = pd.to_datetime(df_evolucao['review_time'], unit='s')
     df_evolucao['ano'] = df_evolucao['data_review'].dt.year
@@ -183,7 +181,6 @@ def dashboard_view(request):
     grafico_evolucao_reviews = plot_to_base_64(plt.gcf())
     plt.close()
 
-    # Análise 3
     df_preco = df[(df['price'] > 0) & (df['price'] < 100)]
     plt.figure(figsize=(10, 6))
     plt.scatter(df_preco['price'], df_preco['review_score'], alpha=0.3, color='orange')
@@ -191,7 +188,6 @@ def dashboard_view(request):
     grafico_preco_score = plot_to_base_64(plt.gcf())
     plt.close()
 
-    # Análise 4
     positivas = ['good', 'great', 'excellent', 'love', 'recommend']
     negativas = ['bad', 'terrible', 'disappointing', 'not good']
     def classificar(texto):
@@ -207,14 +203,13 @@ def dashboard_view(request):
     grafico_sentimento = plot_to_base_64(plt.gcf())
     plt.close()
     
-    # Análise 5 (Exemplo do Professor)
     plt.figure(figsize=(10, 6))
     df['review_score'].value_counts().sort_index().plot(kind='bar', color='coral')
     plt.title('Distribuição das Notas'); plt.xlabel('Nota'); plt.ylabel('Qtd de Avaliações'); plt.grid(axis='y'); plt.tight_layout()
     grafico_distribuicao_notas = plot_to_base_64(plt.gcf())
     plt.close()
 
-    # Análise 6 (Exemplo do Professor)
+
     top_10_livros = df['title'].value_counts().nlargest(10)
     plt.figure(figsize=(10, 8))
     top_10_livros.sort_values().plot(kind='barh', color='teal')
