@@ -3,7 +3,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # --- SUAS URLS ANTIGAS ---
+   
     path('', views.index, name="url_index"),
     path('produto', views.produto, name="url_produto"),
     path('lista_vendas', views.lista_vendas, name="url_lista_vendas"),
@@ -15,7 +15,5 @@ urlpatterns = [
     path('cad_cliente', views.cad_cliente, name="url_cad_cliente"),
     path('registrar_venda', views.registrar_venda, name="url_registrar_venda"),
     path('sair', views.sair, name="url_sair"),
-
-    # --- URL ÚNICA PARA O DASHBOARD COM TODOS OS GRÁFICOS ---
     path('dashboard/', views.dashboard_view, name='url_dashboard'),
 ]

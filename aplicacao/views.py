@@ -1,25 +1,38 @@
+# aplicacao/views.py
+
+import matplotlib
+matplotlib.use('Agg')
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Produto, Cliente, Venda, ItemVenda
-from django.http.response import HttpResponse
+from django.http import HttpResponse
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import ClienteForm, PerfilForm
 from django.utils import timezone
 from decimal import Decimal
+import io, pandas as pd, matplotlib.pyplot as plt, urllib, base64
+from .models import Produto, Cliente, Venda, ItemVenda, Avaliacao
+from .forms import ClienteForm, PerfilForm
 
+# --- FUNÇÕES AUXILIARES PARA AS ANÁLISES ---
+def get_dataframe():
+    return pd.DataFrame(list(Avaliacao.objects.all().values()))
 
+def plot_to_base_64(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png')
+    buf.seek(0)
+    return urllib.parse.quote(base64.b64encode(buf.read()))
+
+# --- SUAS VIEWS ANTIGAS (LOGIN, PRODUTOS, VENDAS, ETC.) ---
 def index(request):
     return redirect('url_entrar')
 
 @login_required(login_url="url_entrar")
 def produto(request):
     produtos = Produto.objects.all()
-    context = {
-        'produtos': produtos,
-    }
+    context = {'produtos': produtos}
     return render(request, 'produto.html', context)
 
 @login_required(login_url="url_entrar")
@@ -97,10 +110,7 @@ def cad_cliente(request):
     else:
         form_cliente = ClienteForm()
         form_perfil = PerfilForm()
-    context = {
-        'form_cliente': form_cliente,
-        'form_perfil': form_perfil
-    }
+    context = {'form_cliente': form_cliente, 'form_perfil': form_perfil}
     return render(request, "cad_cliente.html", context)
 
 @login_required(login_url="url_entrar")
@@ -110,61 +120,115 @@ def registrar_venda(request):
         if not cliente_id:
             messages.error(request, 'Você precisa selecionar um cliente.')
             return redirect('url_registrar_venda')
-
         cliente = get_object_or_404(Cliente, id=cliente_id)
-
         with transaction.atomic():
             nova_venda = Venda.objects.create(cliente=cliente)
             valor_total_venda = Decimal('0.0')
             pelo_menos_um_produto = False
-
             for produto in Produto.objects.all():
                 quantidade_str = request.POST.get(f'produto_{produto.id}')
                 if quantidade_str and int(quantidade_str) > 0:
                     pelo_menos_um_produto = True
                     quantidade = int(quantidade_str)
-
                     if quantidade > produto.qtde:
                         messages.error(request, f"Erro! Estoque insuficiente para o produto '{produto.nome}'.")
                         transaction.set_rollback(True)
                         return redirect('url_registrar_venda')
-
-                    ItemVenda.objects.create(
-                        venda=nova_venda,
-                        produto=produto,
-                        quantidade=quantidade,
-                        preco_unitario=produto.preco
-                    )
-                    
+                    ItemVenda.objects.create(venda=nova_venda, produto=produto, quantidade=quantidade, preco_unitario=produto.preco)
                     produto.qtde -= quantidade
                     produto.save() 
                     valor_total_venda += produto.preco * quantidade
-            
             if not pelo_menos_um_produto:
                 messages.error(request, 'A venda precisa ter pelo menos um produto.')
                 transaction.set_rollback(True)
                 return redirect('url_registrar_venda')
-         
             nova_venda.valor_total = valor_total_venda
             nova_venda.save()
-            
             messages.success(request, 'Venda registrada com sucesso!')
             return redirect('url_produto')
-
     else: 
         clientes = Cliente.objects.all()
         produtos = Produto.objects.all()
-        context = {
-            'clientes': clientes,
-            'produtos': produtos,
-        }
+        context = {'clientes': clientes, 'produtos': produtos}
         return render(request, 'registrar_venda.html', context)
 
 @login_required(login_url="url_entrar")
 def lista_vendas(request):
     vendas = Venda.objects.all().order_by('-data_venda')
-    context = {
-        'vendas': vendas
-    }
+    context = {'vendas': vendas}
     return render(request, 'lista_vendas.html', context)
 
+# --- VIEW ÚNICA PARA O DASHBOARD COM TODOS OS GRÁFICOS ---
+def dashboard_view(request):
+    df = get_dataframe()
+    
+    # Análise 1
+    df_filtrado_usr = df.dropna(subset=['profile_name'])
+    df_filtrado_usr = df_filtrado_usr[df_filtrado_usr['profile_name'] != 'nan']
+    usuarios_ativos = df_filtrado_usr['profile_name'].value_counts().nlargest(15)
+    plt.figure(figsize=(10, 8))
+    usuarios_ativos.sort_values().plot(kind='barh', color='skyblue')
+    plt.title('Top 15 Usuários Mais Ativos'); plt.xlabel('Número de Avaliações'); plt.ylabel('Usuário'); plt.tight_layout()
+    grafico_usuarios_ativos = plot_to_base_64(plt.gcf())
+    plt.close()
+
+    # Análise 2
+    df_evolucao = df.copy()
+    df_evolucao['data_review'] = pd.to_datetime(df_evolucao['review_time'], unit='s')
+    df_evolucao['ano'] = df_evolucao['data_review'].dt.year
+    avaliacoes_por_ano = df_evolucao['ano'].value_counts().sort_index()
+    plt.figure(figsize=(10, 6))
+    avaliacoes_por_ano.plot(kind='line', marker='o', color='red')
+    plt.title('Evolução do Nº de Avaliações por Ano'); plt.xlabel('Ano'); plt.ylabel('Qtd de Avaliações'); plt.grid(True); plt.tight_layout()
+    grafico_evolucao_reviews = plot_to_base_64(plt.gcf())
+    plt.close()
+
+    # Análise 3
+    df_preco = df[(df['price'] > 0) & (df['price'] < 100)]
+    plt.figure(figsize=(10, 6))
+    plt.scatter(df_preco['price'], df_preco['review_score'], alpha=0.3, color='orange')
+    plt.title('Correlação entre Preço e Nota'); plt.xlabel('Preço (USD)'); plt.ylabel('Nota (Score)'); plt.grid(True); plt.tight_layout()
+    grafico_preco_score = plot_to_base_64(plt.gcf())
+    plt.close()
+
+    # Análise 4
+    positivas = ['good', 'great', 'excellent', 'love', 'recommend']
+    negativas = ['bad', 'terrible', 'disappointing', 'not good']
+    def classificar(texto):
+        texto = str(texto).lower()
+        if any(p in texto for p in positivas): return 'Positivo'
+        if any(p in texto for p in negativas): return 'Negativo'
+        return 'Neutro'
+    df['sentimento'] = df['review_summary'].fillna('').apply(classificar)
+    contagem = df['sentimento'].value_counts()
+    plt.figure(figsize=(8, 8))
+    contagem.plot(kind='pie', autopct='%1.1f%%', colors=['lightgreen', 'lightcoral', 'lightskyblue'])
+    plt.title('Distribuição de Sentimentos'); plt.ylabel(''); plt.tight_layout()
+    grafico_sentimento = plot_to_base_64(plt.gcf())
+    plt.close()
+    
+    # Análise 5 (Exemplo do Professor)
+    plt.figure(figsize=(10, 6))
+    df['review_score'].value_counts().sort_index().plot(kind='bar', color='coral')
+    plt.title('Distribuição das Notas'); plt.xlabel('Nota'); plt.ylabel('Qtd de Avaliações'); plt.grid(axis='y'); plt.tight_layout()
+    grafico_distribuicao_notas = plot_to_base_64(plt.gcf())
+    plt.close()
+
+    # Análise 6 (Exemplo do Professor)
+    top_10_livros = df['title'].value_counts().nlargest(10)
+    plt.figure(figsize=(10, 8))
+    top_10_livros.sort_values().plot(kind='barh', color='teal')
+    plt.title('Top 10 Livros Mais Avaliados'); plt.xlabel('Nº de Avaliações'); plt.ylabel('Título do Livro'); plt.tight_layout()
+    grafico_top_livros = plot_to_base_64(plt.gcf())
+    plt.close()
+
+    context = {
+        'grafico_usuarios_ativos': grafico_usuarios_ativos,
+        'grafico_evolucao_reviews': grafico_evolucao_reviews,
+        'grafico_preco_score': grafico_preco_score,
+        'grafico_sentimento': grafico_sentimento,
+        'grafico_distribuicao_notas': grafico_distribuicao_notas,
+        'grafico_top_livros': grafico_top_livros,
+    }
+    
+    return render(request, 'dashboard.html', context)
