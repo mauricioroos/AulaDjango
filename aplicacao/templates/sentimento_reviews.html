@@ -1,0 +1,25 @@
+{% load bootstrap4 %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentimento das Avaliações</title>
+    {% bootstrap_css %}
+</head>
+<body>
+    <div class="container mt-4">
+                <h3> Análise de Sentimento Simples</h3>
+                {% if grafico %}
+                    <div class="d-flex justify-content-center">
+                        <img src="data:image/png;base64,{{ grafico }}" class="img-fluid" style="max-width: 600px;">
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning" role="alert">
+                      O gráfico não pôde ser gerado.
+                    </div>
+                {% endif %}
+
+</body>
+</html>

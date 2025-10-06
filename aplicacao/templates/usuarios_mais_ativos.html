@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Análise: Usuários Mais Ativos{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h3>Análise 1: Top 15 Usuários Mais Ativos</h3>
+        </div>
+        <div class="card-body">
+            {% if grafico %}
+                <img src="data:image/png;base64,{{ grafico }}" class="img-fluid" alt="Gráfico dos usuários mais ativos">
+            {% else %}
+                <div class="alert alert-warning" role="alert">O gráfico não pôde ser gerado.</div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

@@ -1,6 +1,6 @@
 {% load bootstrap4 %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 
 <head>
   <meta charset="UTF-8">
@@ -17,6 +17,7 @@
         <input type="submit" value="Sair" class="btn btn-danger">
       </form>
     </div>
+    
 
     {% bootstrap_messages %}
 
@@ -24,6 +25,7 @@
         <a href="{% url 'url_registrar_venda' %}" class="btn btn-primary">Nova Venda</a>
         <a href="{% url 'url_cad_cliente' %}" class="btn btn-info">Novo Cliente</a>
         <a href="{% url 'url_lista_vendas' %}" class="btn btn-secondary">Histórico de Vendas</a>
+        <a href="{% url 'url_dashboard' %}" class="btn btn-info">Análise</a>
     </div>
 
     <table class="table table-striped table-hover">

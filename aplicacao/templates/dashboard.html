@@ -1,0 +1,59 @@
+{% load bootstrap4 %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Análises</title>
+    {% bootstrap_css %}
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <h1 class="text-center">Análise de Livros</h1>
+        <hr>
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">Usuários Mais Ativos</div>
+                    <div class="card-body">{% if grafico_usuarios_ativos %}<img src="data:image/png;base64,{{ grafico_usuarios_ativos }}" class="img-fluid">{% endif %}</div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">Evolução das Avaliações</div>
+                    <div class="card-body">{% if grafico_evolucao_reviews %}<img src="data:image/png;base64,{{ grafico_evolucao_reviews }}" class="img-fluid">{% endif %}</div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header"> Preço vs. Nota</div>
+                    <div class="card-body">{% if grafico_preco_score %}<img src="data:image/png;base64,{{ grafico_preco_score }}" class="img-fluid">{% endif %}</div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">Análise de Sentimento</div>
+                    <div class="card-body d-flex justify-content-center align-items-center">{% if grafico_sentimento %}<img src="data:image/png;base64,{{ grafico_sentimento }}" class="img-fluid" style="max-height: 400px;">{% endif %}</div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header"> Distribuição das Notas</div>
+                    <div class="card-body">{% if grafico_distribuicao_notas %}<img src="data:image/png;base64,{{ grafico_distribuicao_notas }}" class="img-fluid">{% endif %}</div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">Top 10 Livros Mais Avaliados</div>
+                    <div class="card-body">{% if grafico_top_livros %}<img src="data:image/png;base64,{{ grafico_top_livros }}" class="img-fluid">{% endif %}</div>
+                </div>
+            </div>
+        </div>
+        <a href="/produto" class="btn btn-secondary mb-3">Voltar</a>
+    </div>
+</body>
+</html>
